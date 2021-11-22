@@ -372,9 +372,10 @@ ui <- dashboardPage(
   tags$head(
     tags$style(
       HTML(
-        "html, body {
-          overflow: scroll !important;  
-        }"
+        ".sidebar {
+                      height: 90vh; overflow-y: auto;}
+                    .tab-content > .active {
+                      height: 90vh; overflow: auto;}"
        ) # close HTML       
     )# close tags$style
   ),# close tags#Head
