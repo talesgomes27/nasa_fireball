@@ -1,4 +1,3 @@
-
 # Load Library ------------------------------------------------------------
 
 
@@ -269,7 +268,7 @@ body <- dashboardBody(
               valueBox(
                 value = max_energy,
                 subtitle = "Maximum total radiated energy (Joules)",
-                icon = icon("lightbulb-o")
+                icon = icon("lightbulb")
               ),
               # Add a value box for maximum impact
               valueBox(
@@ -376,7 +375,7 @@ ui <- dashboardPage(
                       height: 90vh; overflow-y: auto;}
                     .tab-content > .active {
                       height: 90vh; overflow: auto;}"
-       ) # close HTML       
+      ) # close HTML       
     )# close tags$style
   ),# close tags#Head
   header = header,
