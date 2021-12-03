@@ -5,9 +5,9 @@ account: talesgomes27
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 5174399
-bundleId: 5321857
+bundleId: 5321946
 url: https://talesgomes27.shinyapps.io/nasa_fireball/
-when: 1638499176.88716
-lastSyncTime: 1638499176.88719
+when: 1638500730.56304
+lastSyncTime: 1638500730.56308
 asMultiple: FALSE
 asStatic: FALSE

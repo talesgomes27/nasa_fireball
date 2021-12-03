@@ -316,7 +316,10 @@ body <- dashboardBody(
             fillPage(
               tags$style(type = "text/css",
                          "#plot {height: calc(100vh - 80px) !important;}"),
-              plotlyOutput("plot", width = "100%", height = "100%")
+              shinycustomloader::withLoader(plotlyOutput("plot",
+                                                         width = "100%",
+                                                         height = "100%"),
+                         type="html", loader="loader6")
             )
     ),
     
@@ -329,7 +332,8 @@ body <- dashboardBody(
                   box(
                     title = NULL,
                     width = NULL, status = "primary",
-                    plotlyOutput("histogram_v1")
+                    shinycustomloader::withLoader(plotlyOutput("histogram_v1"),
+                                                  type="html", loader="loader6")
                   )
                 ),
                 column(
@@ -337,7 +341,8 @@ body <- dashboardBody(
                   box(
                     title = NULL,
                     width = NULL, status = "primary",
-                    plotlyOutput("histogram_v2")
+                    shinycustomloader::withLoader(plotlyOutput("histogram_v2"),
+                                                  type="html", loader="loader6")
                   )
                 )
               ),
@@ -346,7 +351,8 @@ body <- dashboardBody(
                   offset = 2, width = 8,
                   box(title = NULL,
                       width = NULL, status = "primary",
-                      plotlyOutput("scatter_plot")
+                      shinycustomloader::withLoader(plotlyOutput("scatter_plot"),
+                                                    type="html", loader="loader6")
                   )
                 )
               )
