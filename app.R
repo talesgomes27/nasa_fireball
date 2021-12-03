@@ -1,7 +1,7 @@
 # Load Library ------------------------------------------------------------
 
 
-# Data used
+# Data used in the project
 # https://cneos.jpl.nasa.gov/fireballs/
 
 library(tidyverse)
