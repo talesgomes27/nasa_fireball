@@ -20,10 +20,8 @@ library(reactable)
 
 data <- jsonlite::fromJSON(
   "https://ssd-api.jpl.nasa.gov/fireball.api",
-  simplifyDataFrame = T,
-  flatten = T
+  simplifyDataFrame = T
 )
-
 
 
 # Data Wrangling  ---------------------------------------------------------
@@ -44,9 +42,6 @@ nasa_fireball <- nasa_fireball |>
   select(-c(lat_dir, lon_dir)) |>
   mutate_if(is.character, as.numeric) |> 
   relocate(c(lat, lon), .after = last_col())
-
-
-
 
 # Global Variables --------------------------------------------------------
 
@@ -392,12 +387,10 @@ ui <- dashboardPage(
 server <- function(input, output) {
   
   nasa_fireball_r <- reactive({
-    
-    
     nasa_fireball |>
-      filter(date >= input$date[1] &
-               date <= input$date[2] &
-               impact_e >= as.numeric(input$impact_e))
+      filter(date >= (as.Date(input$date[1]) - 1),
+             date <= (as.Date(input$date[2]) + 1),
+             impact_e >= input$impact_e)
   })
   
   
