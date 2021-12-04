@@ -529,7 +529,19 @@ server <- function(input, output) {
   output$scatter_plot <- renderPlotly({
     
     plot3 <- ggplot(nasa_fireball, aes_string(input$variable_1, input$variable_2)) +
-      geom_point(aes(color = impact_e, size = impact_e)) +
+      geom_point(aes(color = impact_e,
+                     size = impact_e,
+                     text = map(paste(
+                       '<b>Date:</b>', date,
+                       '<br>',
+                       '<b>total impact energy (kt):</b>', impact_e,
+                       '<br>',
+                       '<b>total radiated energy (J):</b>', energy,
+                       '<br>',
+                       '<b>Latitude:</b>', lat,
+                       '<br>',
+                       '<b>Longitude:</b>', lon), HTML)
+                     ), alpha = 0.7) +
       geom_smooth(color = "red", se = FALSE) +
       scale_size_continuous(breaks = c(0.5, 5), trans = 'log') +
       scale_color_viridis_c(trans = 'log') +
@@ -544,7 +556,7 @@ server <- function(input, output) {
         size =  "Impact energy"
       )
     
-    ggplotly(plot3)
+    ggplotly(plot3, tooltip = "text")
     
     
   })
