@@ -98,6 +98,7 @@ histogram <- function(col_name, fill = "blue", bins = 25){
       y = NULL
     )
   
+  
   return(ggplotly(plot))
   
 }
