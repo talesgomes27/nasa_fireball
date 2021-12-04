@@ -82,6 +82,7 @@ description <- c(
 #Function used to plot the histogram plot
 histogram <- function(col_name, fill = "blue", bins = 25){
   
+  
   plot <- ggplot(nasa_fireball, aes_string(x = col_name)) +
     geom_histogram(bins = bins, fill = fill, color = "black") +
     scale_x_continuous(trans = 'log', labels = scales::number_format(accuracy = 0.1)) +
