@@ -71,6 +71,7 @@ project_objective <- paste(readLines("project_objective.html"), collapse="\n")
 
 
 # Auxiliary variable used to plot axis labal plot
+
 description <- c(
   "energy" = "Total Radiated Energy (J)",
   "impact_e" = "Total Impact Energy (kt)",
@@ -82,6 +83,10 @@ description <- c(
 #Function used to plot the histogram plot
 histogram <- function(col_name, fill = "blue", bins = 25){
   
+  # text = map(paste(
+  #   '<b>Frequency:</b>', count,
+  #   '<br>',
+  #   strong(description[x]), ":", x), HTML)
   
   plot <- ggplot(nasa_fireball, aes_string(x = col_name)) +
     geom_histogram(bins = bins, fill = fill, color = "black") +
