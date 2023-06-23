@@ -405,7 +405,8 @@ server <- function(input, output) {
       filter(date >= (as.Date(input$date[1]) - 1),
              date <= (as.Date(input$date[2]) + 1),
              impact_e >= input$impact_e)
-  })
+  }) #|> 
+    #bindCache(nasa_fireball)
   
   
   
