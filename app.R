@@ -1,595 +1,313 @@
-# Load Library ------------------------------------------------------------
+# NASA Fireballs & Bolides - Painel Analitico ----
 
-
-# Data used in the project
-# https://cneos.jpl.nasa.gov/fireballs/
-
-library(tidyverse)
 library(shiny)
-library(shinydashboard)
-library(dashboardthemes)
-library(sf)
-library(rnaturalearth)
-library(rnaturalearthdata)
+library(bslib)
 library(plotly)
 library(reactable)
 
+# Modulos do projeto
+source("R/data_fireball.R")
+source("R/plots_fireball.R")
+source("R/ui_components.R")
 
-# Data Import -------------------------------------------------------------
+# Ingestão de dados no boot com fallback automático em cache
+initial_data <- fetch_fireball_data()
+nasa_fireball <- initial_data$data
+data_source  <- initial_data$source
 
+min_date <- min(as.Date(nasa_fireball$date), na.rm = TRUE)
+max_date <- max(as.Date(nasa_fireball$date), na.rm = TRUE)
 
-data <- jsonlite::fromJSON(
-  "https://ssd-api.jpl.nasa.gov/fireball.api",
-  simplifyDataFrame = T
-)
+# UI Definition -----------------------------------------------------------
 
-
-# Data Wrangling  ---------------------------------------------------------
-
-nasa_fireball <- as_tibble(data$data)
-names(nasa_fireball) <- data$fields
-nasa_fireball <- janitor::clean_names(nasa_fireball)
-
-
-nasa_fireball <- nasa_fireball |>
-  mutate(
-    date = lubridate::as_datetime(date),
-    lat = paste(lat, lat_dir),
-    lon = paste(lon, lon_dir),
-    lat = parzer::parse_lat(lat),
-    lon = parzer::parse_lon(lon)
-  ) |>
-  select(-c(lat_dir, lon_dir)) |>
-  mutate_if(is.character, as.numeric) |> 
-  relocate(c(lat, lon), .after = last_col())
-
-# Global Variables --------------------------------------------------------
-
-
-#Data from global maps
-world <- ne_countries(scale = "medium", returnclass = "sf")
-
-
-#Variable used
-
-# Max velocity
-max_vel <- max(na.omit(nasa_fireball$vel)) 
-# MaX impact energy
-max_impact_e <- max(na.omit(nasa_fireball$impact_e))
-# Max energy radiated
-max_energy <- max(na.omit(nasa_fireball$energy)) 
-#Number of events
-number_events <- as.numeric(data$count) - 1 
-#Text for the description of the columns shown in the table
-table_column_descriptions <- paste(readLines("table_column_descriptions.html"), collapse="\n")
-# Text for the introdution text
-fireball_introduction <- paste(readLines("fireball_introduction.html"), collapse="\n")
-# Text for the Widget description text
-widget_data_description <- paste(readLines("widget_data_description.html"), collapse="\n")
-# Text for the Project objective text
-project_objective <- paste(readLines("project_objective.html"), collapse="\n")
-
-
-# Auxiliary variable used to plot axis labal plot
-
-description <- c(
-  "energy" = "Total Radiated Energy (J)",
-  "impact_e" = "Total Impact Energy (kt)",
-  "alt" = "Altitude (km)",
-  "vel" = "Velocity (km/s)"
-)
-
-
-#Function used to plot the histogram plot
-histogram <- function(col_name, fill = "blue", bins = 25){
-  
-  # text = map(paste(
-  #   '<b>Frequency:</b>', count,
-  #   '<br>',
-  #   strong(description[x]), ":", x), HTML)
-  
-  plot <- ggplot(nasa_fireball, aes_string(x = col_name)) +
-    geom_histogram(bins = bins, fill = fill, color = "black") +
-    scale_x_continuous(trans = 'log', labels = scales::number_format(accuracy = 0.1)) +
-    theme_bw() +
-    labs(
-      title = paste0("Histogram of ", description[col_name]),
-      x = description[col_name],
-      y = NULL
-    )
-  
-  
-  return(ggplotly(plot))
-  
-}
-
-
-
-# DashboardHeader ---------------------------------------------------------
-
-
-
-header <- dashboardHeader(
-  title = span(tagList(icon("meteor"), "Fireballs Events")),
-  dropdownMenu(
-    type = "messages",
-    messageItem(
-      from = "Nasa",
-      message = "You can view the International Space Station!",
-      href = "https://spotthestation.nasa.gov/sightings/"
+ui <- bslib::page_navbar(
+  title = shiny::span(
+    shiny::icon("meteor", class = "text-primary me-2"),
+    "NASA Fireballs & Bolides"
+  ),
+  theme = build_space_theme(),
+  id = "nav_active",
+  sidebar = bslib::sidebar(
+    width = 300,
+    title = "Controles da Missão",
+    shiny::h6("Filtros Globais", class = "text-uppercase small fw-bold mt-2"),
+    shiny::dateRangeInput(
+      "date_range",
+      "Período de Observação",
+      start     = min_date,
+      end       = max_date,
+      min       = min_date,
+      max       = max_date,
+      format    = "dd/mm/yyyy",
+      language  = "pt-BR",
+      separator = " até "
     ),
-    # Add a second messageItem()
-    messageItem(
-      from = "Nasa",
-      message = "Learn more about the International Space Station",
-      href = "https://spotthestation.nasa.gov/faq.cfm"
-    )
-  )
-)
-
-
-# DashboardSidebar --------------------------------------------------------
-
-
-sidebar <- dashboardSidebar(
-  
-  sidebarMenu(
-    menuItem("Dashboard", tabName = "dashboard", icon = icon("home")),
-    menuItem("Table", tabName = "table", icon = icon("th")),
-    menuItem("Map",
-             tabName = "map",
-             icon = icon("globe"),
-             badgeLabel = "new",
-             badgeColor = "green"
+    shiny::selectInput(
+      "min_impact_e",
+      "Energia Mínima de Impacto",
+      choices = c(
+        "Todos os eventos (ilimitado)" = 0,
+        "≥ 0,1 kt"                     = 0.1,
+        "≥ 0,3 kt"                     = 0.3,
+        "≥ 1,0 kt"                     = 1,
+        "≥ 3,0 kt"                     = 3,
+        "≥ 10,0 kt (Superbólidos)"     = 10,
+        "≥ 15,0 kt (Escala Hiroshima)" = 15,
+        "≥ 30,0 kt"                    = 30,
+        "≥ 100,0 kt"                   = 100
+      ),
+      selected = 0
     ),
-    menuItem("Plot", tabName = "plot", icon = icon("chart-line"))
-  ),
-  
-  hr(),
-  
-  h4("Map/Table inputs"),
-  
-  dateRangeInput(
-    "date",
-    "Select a Date Range",
-    start = min(nasa_fireball$date),
-    end = max(nasa_fireball$date),
-    min = min(nasa_fireball$date),
-    max = max(nasa_fireball$date)
-  ),
-  
-  br(),
-  
-  selectInput("impact_e",
-              "Select the minimum impact energy shown:",
-              choices = c("unlimited" = 0, "0.1kt" = 0.1,
-                          "0.3kt" = 0.3, "1kt" = 1, "3kt" = 3,
-                          "10kt" = 10, "30kt" = 30, "100kt" = 100)
-              
-  ),
-  
-  hr(),
-  
-  h4("Plot inputs"),
-  
-  selectInput(
-    inputId = "variable_1",
-    label = "select x-axis variable:",
-    choices = c(
-      "Total Radiated Energy (J)" = "energy",
-      "Total Impact Energy (kt)" = "impact_e",
-      "Altitude (km)" = "alt",
-      "Velocity (km/s)" = "vel"
+    shiny::radioButtons(
+      "map_projection",
+      "Projeção Espacial",
+      choices = c(
+        "Globo 3D Ortográfico" = "orthographic",
+        "Mapa 2D Global"       = "natural earth"
+      ),
+      selected = "orthographic"
     ),
-    selected = "vel"
+    shiny::hr(style = "border-color: #1E293B;"),
+    shiny::uiOutput("filter_summary_ui")
   ),
-  
-  br(),
-  
-  selectInput(
-    inputId ="variable_2",
-    label ="select y-axis variable:",
-    choices = c(
-      "Total Radiated Energy (J)" = "energy",
-      "Total Impact Energy (kt)" = "impact_e",
-      "Altitude (km)" = "alt",
-      "Velocity (km/s)" = "vel"
-    ),
-    selected = "impact_e"
-  ),
-  
-  br(),
-  
-  sliderInput(
-    inputId = "bin_value",
-    label = "Select the Histogram's bin size:",
-    min = 1,
-    max = 100,
-    value = 30,
-    step = 0.5
-  )
-  
-  
-  
-)
 
+  # Aba 1: Centro de Comando (Command Center) -----------------------------
+  bslib::nav_panel(
+    "Centro de Comando",
+    icon = shiny::icon("dashboard"),
+    shiny::div(
+      class = "container-fluid px-0",
+      # Indicadores principais (KPIs)
+      bslib::layout_column_wrap(
+        width = 1/4,
+        class = "mb-3",
+        bslib::value_box(
+          title = "Total de Detecções",
+          value = shiny::textOutput("kpi_total_count"),
+          showcase = shiny::icon("meteor", class = "text-primary fs-3"),
+          class = "vbox-orange",
+          shiny::span(class = "small text-secondary", "Eventos no intervalo filtrado")
+        ),
+        bslib::value_box(
+          title = "Maior Impacto Registrado",
+          value = shiny::textOutput("kpi_max_impact"),
+          showcase = shiny::icon("explosion", class = "text-danger fs-3"),
+          class = "vbox-red",
+          shiny::uiOutput("kpi_hiroshima_comp")
+        ),
+        bslib::value_box(
+          title = "Pico de Velocidade",
+          value = shiny::textOutput("kpi_max_vel"),
+          showcase = shiny::icon("rocket", class = "text-info fs-3"),
+          class = "vbox-cyan",
+          shiny::span(class = "small text-secondary", "Velocidade pré-impacto (km/s)")
+        ),
+        bslib::value_box(
+          title = "Altitude Média do Brilho",
+          value = shiny::textOutput("kpi_avg_alt"),
+          showcase = shiny::icon("mountain", class = "text-warning fs-3"),
+          class = "vbox-amber",
+          shiny::span(class = "small text-secondary", "Altitude média de fragmentação")
+        )
+      ),
 
-# DashboardBody -----------------------------------------------------------
-
-
-
-body <- dashboardBody(
-  shinyDashboardThemes(
-    theme = "grey_light"
-  ),
-  
-  
-  
-  tabItems(
-    tabItem(tabName = "dashboard",
-            fluidPage(
-              fluidRow(
-                column(
-                  offset = 2,
-                  width = 8,
-                  box(
-                    title = "Project",
-                    width = NULL,
-                    status = "danger",
-                    solidHeader = TRUE,
-                    collapsible = TRUE,
-                    collapsed = FALSE,
-                    uiOutput("project_objective")
-                  )
-                )
+      # Layout principal: Globo 3D e painel analitico
+      bslib::layout_columns(
+        col_widths = c(7, 5),
+        bslib::card(
+          full_screen = TRUE,
+          bslib::card_header(
+            class = "d-flex justify-content-between align-items-center",
+            shiny::span(shiny::icon("globe-americas", class = "text-info me-2"), "Mapa Global de Bólidos"),
+            shiny::span(class = "small text-secondary", "Escala de energia em kilotons (kt)")
+          ),
+          plotly::plotlyOutput("geo_plot", height = "560px")
+        ),
+        bslib::navset_card_underline(
+          title = "Análise Científica",
+          full_screen = TRUE,
+          bslib::nav_panel(
+            "Série Temporal",
+            icon = shiny::icon("chart-line"),
+            plotly::plotlyOutput("timeline_plot", height = "520px")
+          ),
+          bslib::nav_panel(
+            "Perfil Atmosférico",
+            icon = shiny::icon("layer-group"),
+            plotly::plotlyOutput("atmosphere_plot", height = "520px")
+          ),
+          bslib::nav_panel(
+            "Correlação",
+            icon = shiny::icon("chart-simple"),
+            shiny::div(
+              class = "d-flex gap-2 mb-2 pt-1",
+              shiny::selectInput(
+                "corr_x", "Eixo X:",
+                choices = c("Velocidade (km/s)" = "vel", "Energia Radiada" = "energy", "Altitude (km)" = "alt"),
+                selected = "vel", width = "50%"
               ),
-              fluidRow(
-                column(
-                  width = 12,
-                  tabBox(
-                    width = NULL,
-                    id = "introduction",
-                    tabPanel(
-                      title = "Introduction",
-                      icon = icon("globe-americas"),
-                      uiOutput("resume")
-                    ),
-                    tabPanel(
-                      title = "Fireball and Bolide Data Widget",
-                      icon = icon("chart-bar"),
-                      uiOutput("widget_description")
-                    )
-                  )
-                )
-              )
-            )
-    ),
-    
-    tabItem(tabName = "table",
-            fluidRow(
-              # Add a value box for maximum energy
-              valueBox(
-                value = max_energy,
-                subtitle = "Maximum total radiated energy (Joules)",
-                icon = icon("lightbulb")
-              ),
-              # Add a value box for maximum impact
-              valueBox(
-                value = max_impact_e,
-                subtitle = "Maximum impact energy (kilotons of TNT)",
-                icon = icon("star")
-              ),
-              # Add a value box for maximum velocity
-              valueBox(
-                value = max_vel,
-                subtitle = "Maximum pre-impact velocity",
-                icon = icon("fire")
+              shiny::selectInput(
+                "corr_y", "Eixo Y:",
+                choices = c("Energia de Impacto (kt)" = "impact_e", "Energia Radiada" = "energy", "Altitude (km)" = "alt"),
+                selected = "impact_e", width = "50%"
               )
             ),
-            
-            fluidPage(
-              fluidRow(
-                column(
-                  width = 12,
-                  reactableOutput("table", width = "100%", height = "100%")
-                )
-              ),
-              fluidRow(
-                column(
-                  width = 1,
-                  downloadButton('download',"Download the data")
-                )
-              ),
-              fluidRow(
-                column(
-                  offset = 2,
-                  width = 8,
-                  box(
-                    title = "Table Column Descriptions",
-                    width = NULL,
-                    status = "danger",
-                    icon = icon("scroll"),
-                    solidHeader = TRUE,
-                    collapsible = TRUE,
-                    collapsed = TRUE,
-                    uiOutput("table_description")
-                  )
-                )
-              )
-            )
-            
-    ),
-    
-    tabItem(tabName = "map",
-            fillPage(
-              tags$style(type = "text/css",
-                         "#plot {height: calc(100vh - 80px) !important;}"),
-              shinycustomloader::withLoader(plotlyOutput("plot",
-                                                         width = "100%",
-                                                         height = "100%"),
-                         type="html", loader="loader6")
-            )
-    ),
-    
-    tabItem(tabName = "plot",
-            fluidPage(
-              
-              fluidRow(
-                column(
-                  width = 6,
-                  box(
-                    title = NULL,
-                    width = NULL, status = "primary",
-                    shinycustomloader::withLoader(plotlyOutput("histogram_v1"),
-                                                  type="html", loader="loader6")
-                  )
-                ),
-                column(
-                  width = 6,
-                  box(
-                    title = NULL,
-                    width = NULL, status = "primary",
-                    shinycustomloader::withLoader(plotlyOutput("histogram_v2"),
-                                                  type="html", loader="loader6")
-                  )
-                )
-              ),
-              fluidRow(
-                column(
-                  offset = 2, width = 8,
-                  box(title = NULL,
-                      width = NULL, status = "primary",
-                      shinycustomloader::withLoader(plotlyOutput("scatter_plot"),
-                                                    type="html", loader="loader6")
-                  )
-                )
-              )
-            )
+            plotly::plotlyOutput("correlation_plot", height = "450px")
+          )
+        )
+      )
     )
-    
-  )
+  ),
+
+  # Aba 2: Explorador de Dados --------------------------------------------
+  bslib::nav_panel(
+    "Explorador de Dados",
+    icon = shiny::icon("table"),
+    bslib::card(
+      full_screen = TRUE,
+      class = "mb-3",
+      bslib::card_header(
+        class = "d-flex justify-content-between align-items-center",
+        shiny::span(shiny::icon("database", class = "text-primary me-2"), "Tabela Cronológica de Detecções"),
+        shiny::downloadButton("download_csv", "Exportar CSV", class = "btn-outline-primary btn-sm")
+      ),
+      bslib::card_body(
+        reactable::reactableOutput("fireball_table")
+      )
+    ),
+    column_dictionary_ui()
+  ),
+
+  # Aba 3: Briefing da Missão ---------------------------------------------
+  bslib::nav_panel(
+    "Briefing da Missão",
+    icon = shiny::icon("circle-info"),
+    mission_brief_ui()
+  ),
+
+  # Elementos de Cabeçalho / Navbar ---------------------------------------
+  bslib::nav_spacer(),
+  bslib::nav_item(bslib::input_dark_mode(id = "dark_mode", mode = "dark")),
+  bslib::nav_item(shiny::uiOutput("header_badge_ui"))
 )
 
+# Server Logic ------------------------------------------------------------
 
+server <- function(input, output, session) {
 
-# ShinyDashboard ----------------------------------------------------------
-
-
-
-ui <- dashboardPage(
-  tags$head(
-    tags$style(
-      HTML(
-        ".sidebar {
-                      height: 90vh; overflow-y: auto;}
-                    .tab-content > .active {
-                      height: 90vh; overflow: auto;}"
-      ) # close HTML       
-    )# close tags$style
-  ),# close tags#Head
-  header = header,
-  sidebar = sidebar,
-  body = body
-)
-
-
-
-# Server ------------------------------------------------------------------
-
-
-
-server <- function(input, output) {
-  
-  nasa_fireball_r <- reactive({
-    nasa_fireball |>
-      filter(date >= (as.Date(input$date[1]) - 1),
-             date <= (as.Date(input$date[2]) + 1),
-             impact_e >= input$impact_e)
-  }) #|> 
-    #bindCache(nasa_fireball)
-  
-  
-  
-  #### Maps ####
-  output$plot <- renderPlotly({
-    
-    plot <- ggplot() +
-      geom_sf(data = world,
-              colour = "black",
-              fill = "grey") +
-      geom_point(
-        data = nasa_fireball_r(),
-        aes(
-          x = lon,
-          y = lat,
-          size = impact_e,
-          colour = impact_e,
-          text = map(paste(
-            '<b>Date:</b>', date,
-            '<br>',
-            '<b>total impact energy (kt):</b>', impact_e,
-            '<br>',
-            '<b>total radiated energy (J):</b>', energy,
-            '<br>',
-            '<b>Latitude:</b>', lat,
-            '<br>',
-            '<b>Longitude:</b>', lon), HTML)), alpha = .7) +
-      scale_size(trans = 'log', range = c(1.5, 8)) +
-      viridis::scale_color_viridis(trans = 'log') +
-      ggthemes::theme_map() +
-      labs(
-        color = "Impact Energy",
-        size = "Impact Energy"
-      ) +
-      theme(
-        #legend.position = "none"
-      )
-    
-    
-    ####  Map - GGplot to PLotly ####
-    ggplotly(plot, tooltip = "text") |> 
-      layout(title = list(text = paste0('<br>',"<b>Fireballs Reported by US Government Sensors</b>",
-                                        '<br>',
-                                        '<sup>',
-                                        input$date[1], 
-                                        " to ",
-                                        input$date[2],
-                                        "; limited to events >= ",
-                                        input$impact_e,
-                                        " kt",
-                                        '</sup>'),
-                          titlefont = list(size = 30, family = 'sans serif')
-      ),
-      annotations = list(text = '<a href="https://cneos.jpl.nasa.gov/fireballs/"><b>Source: NASA/JPL Fireball Data API\nVersion: 1.0</b></a>', 
-                         font = list(size = 14, family = 'sans serif')
-                         ,showarrow = FALSE
-                         ,xref = 'paper', x = 0
-                         ,yref = 'paper', y = 0
-      )
-      )
-    
+  # Reativo central que filtra dados com base na sidebar
+  fireballs_r <- shiny::reactive({
+    filter_fireballs(nasa_fireball, input$date_range, input$min_impact_e)
   })
-  
-  
-  #### Bulding Data Table ####
-  output$table <- renderReactable({
-    
-    theme <-
-      reactableTheme(
-        borderColor = "#dfe2e5",
-        stripedColor = "#f6f8fa",
-        highlightColor = "#f0f5f9",
-        cellPadding = "8px 12px"
-      )
-    
-    reactable(
-      nasa_fireball_r(),
-      filterable = TRUE,
-      searchable = FALSE,
-      resizable = TRUE,
-      paginationType = "jump",
-      showPageSizeOptions = TRUE,
-      borderless = TRUE,
-      striped = TRUE,
-      showSortable = TRUE,
-      columns = list(
-        date = colDef(name = "Peak Brightness Date/Time (UT)",
-                      aggregate = "max"),
-        energy = colDef(
-          name = "Total Radiated Energy (J x 1e-10)",
-          defaultSortOrder = "desc",
-          aggregate = "mean"
-        ),
-        impact_e = colDef(name = "Calculated Total Impact Energy (kt)",
-                          aggregate = "max"),
-        alt = colDef(name = "Altitude (km)",
-                     aggregate = "max"),
-        vel = colDef(name = "Velocity (km/s)",
-                     aggregate = "max"),
-        lat = colDef(name = "Latitude"),
-        lon = colDef(name = "Longitude")
+
+  is_dark_r <- shiny::reactive({
+    !identical(input$dark_mode, "light")
+  })
+
+  # Indicadores de status e contagem de eventos
+  output$header_badge_ui <- shiny::renderUI({
+    render_status_badge(data_source, nrow(nasa_fireball))
+  })
+
+  output$filter_summary_ui <- shiny::renderUI({
+    df <- fireballs_r()
+    shiny::div(
+      class = "small",
+      shiny::p(
+        class = "mb-1 text-white fw-semibold",
+        shiny::span(class = "text-primary fs-5", format(nrow(df), big.mark = ".", decimal.mark = ",")),
+        shiny::span(class = "text-secondary", paste0(" de ", format(nrow(nasa_fireball), big.mark = ".", decimal.mark = ","), " eventos"))
       ),
-      theme = theme
+      shiny::div(
+        class = "d-flex align-items-center gap-2 mt-2",
+        shiny::icon("location-dot", class = "text-info small"),
+        shiny::span(class = "text-secondary", "Geolocalizados: "),
+        shiny::strong(class = "text-info", sum(!is.na(df$lat) & !is.na(df$lon)))
+      )
     )
-    
   })
-  
-  #### Download Button ####
-  output$download <- downloadHandler(
-    filename = function(){"nasa_fireball.csv"}, 
-    content = function(fname){
-      write.csv(nasa_fireball_r(), fname)
+
+  # Indicadores principais (KPIs) ----
+  output$kpi_total_count <- shiny::renderText({
+    df <- fireballs_r()
+    format(nrow(df), big.mark = ".", decimal.mark = ",")
+  })
+
+  output$kpi_max_impact <- shiny::renderText({
+    df <- fireballs_r()
+    if (nrow(df) == 0 || all(is.na(df$impact_e))) return("—")
+    max_val <- max(df$impact_e, na.rm = TRUE)
+    paste0(format(max_val, big.mark = ".", decimal.mark = ","), " kt")
+  })
+
+  output$kpi_hiroshima_comp <- shiny::renderUI({
+    df <- fireballs_r()
+    if (nrow(df) == 0 || all(is.na(df$impact_e))) return(NULL)
+    max_val <- max(df$impact_e, na.rm = TRUE)
+    equiv <- round(max_val / HIROSHIMA_KT, 1)
+    if (equiv >= 1) {
+      shiny::span(
+        style = "background: rgba(239, 68, 68, 0.15); color: #FCA5A5; border: 1px solid rgba(239, 68, 68, 0.35); border-radius: 999px; padding: 2px 8px; font-size: 0.76rem; font-weight: 600;",
+        paste0("~", equiv, "x Hiroshima")
+      )
+    } else {
+      shiny::span(class = "small text-secondary", "Abaixo de 1x Hiroshima")
+    }
+  })
+
+  output$kpi_max_vel <- shiny::renderText({
+    df <- fireballs_r()
+    if (nrow(df) == 0 || all(is.na(df$vel))) return("—")
+    max_val <- max(df$vel, na.rm = TRUE)
+    paste0(format(max_val, big.mark = ".", decimal.mark = ","), " km/s")
+  })
+
+  output$kpi_avg_alt <- shiny::renderText({
+    df <- fireballs_r()
+    if (nrow(df) == 0 || all(is.na(df$alt))) return("—")
+    avg_val <- mean(df$alt, na.rm = TRUE)
+    paste0(format(round(avg_val, 1), big.mark = ".", decimal.mark = ","), " km")
+  })
+
+  # Graficos analiticos (Plotly) ----
+  output$geo_plot <- plotly::renderPlotly({
+    df <- fireballs_r()
+    shiny::validate(shiny::need(nrow(df) > 0, "Nenhum evento encontrado para o período selecionado."))
+    plot_fireball_geo(df, projection_type = input$map_projection, is_dark = is_dark_r())
+  })
+
+  output$timeline_plot <- plotly::renderPlotly({
+    df <- fireballs_r()
+    shiny::validate(shiny::need(nrow(df) > 0, "Nenhum evento encontrado para o período selecionado."))
+    plot_fireball_timeline(df, is_dark = is_dark_r())
+  })
+
+  output$atmosphere_plot <- plotly::renderPlotly({
+    df <- fireballs_r()
+    shiny::validate(shiny::need(nrow(df) > 0, "Nenhum evento com dados de altitude e velocidade."))
+    plot_atmosphere_profile(df, is_dark = is_dark_r())
+  })
+
+  output$correlation_plot <- plotly::renderPlotly({
+    df <- fireballs_r()
+    shiny::validate(shiny::need(nrow(df) > 0, "Nenhum dado para correlacionar."))
+    plot_energy_correlation(df, var_x = input$corr_x, var_y = input$corr_y, is_dark = is_dark_r())
+  })
+
+  # Tabela interativa e exportacao ----
+  output$fireball_table <- reactable::renderReactable({
+    df <- fireballs_r()
+    build_fireball_reactable(df, is_dark = is_dark_r())
+  })
+
+  output$download_csv <- shiny::downloadHandler(
+    filename = function() {
+      paste0("nasa_fireballs_", format(Sys.Date(), "%Y%m%d"), ".csv")
+    },
+    content = function(file) {
+      utils::write.csv(fireballs_r(), file, row.names = FALSE)
     }
   )
-  
-  
-  #### Bulding Plots #####
-  output$histogram_v1 <- renderPlotly({
-    histogram(input$variable_1, fill = "blue", bins = input$bin_value)
-  })
-  
-  
-  output$histogram_v2 <- renderPlotly({
-    histogram(input$variable_2, fill = "red", bins = input$bin_value)
-  })
-  
-  
-  output$scatter_plot <- renderPlotly({
-    
-    plot3 <- ggplot(nasa_fireball, aes_string(input$variable_1, input$variable_2)) +
-      geom_point(aes(color = impact_e,
-                     size = impact_e,
-                     text = map(paste(
-                       '<b>Date:</b>', date,
-                       '<br>',
-                       '<b>total impact energy (kt):</b>', impact_e,
-                       '<br>',
-                       '<b>total radiated energy (J):</b>', energy,
-                       '<br>',
-                       '<b>Latitude:</b>', lat,
-                       '<br>',
-                       '<b>Longitude:</b>', lon), HTML)
-                     ), alpha = 0.7) +
-      geom_smooth(color = "red", se = FALSE) +
-      scale_size_continuous(breaks = c(0.5, 5), trans = 'log') +
-      scale_color_viridis_c(trans = 'log') +
-      scale_x_continuous(trans = 'log', labels = scales::number_format(accuracy = 0.1)) +
-      scale_y_continuous(trans = 'log', labels = scales::number_format(accuracy = 0.1)) +
-      theme_bw() + 
-      labs(
-        title = paste0(description[input$variable_1], " Vs ", description[input$variable_2]),
-        x = description[input$variable_1],
-        y = description[input$variable_2],
-        color = "Impact energy",
-        size =  "Impact energy"
-      )
-    
-    ggplotly(plot3, tooltip = "text")
-    
-    
-  })
-  
-  output$resume <-  renderUI({
-    
-    HTML(fireball_introduction)
-    
-  })
-  
-  output$table_description <- renderUI({
-    #Text input from a external file
-    HTML(table_column_descriptions)
-  })
-  
-  output$widget_description <- renderUI({
-    #Text input from a external file
-    HTML(widget_data_description)
-  })
-  
-  output$project_objective <- renderUI({
-    HTML(project_objective)
-  })
-  
 }
 
-# Run the application
 shinyApp(ui = ui, server = server)
