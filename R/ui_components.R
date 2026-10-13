@@ -246,11 +246,11 @@ render_case_banner <- function(case_id) {
       shiny::div(
         class = "d-flex flex-wrap align-items-center gap-2 mb-1",
         shiny::span(style = "background: rgba(239, 68, 68, 0.2); color: #FCA5A5; border: 1px solid #EF4444; border-radius: 999px; padding: 2px 10px; font-size: 0.76rem; font-weight: 700;", "440 kt TNT • ~29x Hiroshima"),
-        shiny::strong(class = "text-white", "15 de Fevereiro de 2013 — Superbólido de Chelyabinsk, Rússia")
+        shiny::strong(class = "text-white", "15/02/2013 — Superbólido de Chelyabinsk, Rússia")
       ),
       shiny::p(
         class = "mb-0 small", style = "color: #CBD5E1;",
-        "O maior evento de impacto registrado no século XXI. Um asteroide de aproximadamente 20 metros entrou na atmosfera a 18,6 km/s e sofreu desintegração catastrófica a 23,3 km de altitude. A onda de choque superou a barreira do som, quebrou janelas em mais de 7.200 edifícios e feriu cerca de 1.500 pessoas por estilhaços. A fragmentação no ar (airburst) impediu a formação de uma cratera fatal no solo."
+        "Asteroide de ~20 m fragmentado a 23,3 km de altitude. A onda de choque danificou edifícios e feriu cerca de 1.500 pessoas na região urbana, sem formação de cratera em solo."
       )
     ),
     "bering" = shiny::div(
@@ -258,23 +258,23 @@ render_case_banner <- function(case_id) {
       shiny::div(
         class = "d-flex flex-wrap align-items-center gap-2 mb-1",
         shiny::span(style = "background: rgba(245, 158, 11, 0.2); color: #FCD34D; border: 1px solid #F59E0B; border-radius: 999px; padding: 2px 10px; font-size: 0.76rem; font-weight: 700;", "173 kt TNT • ~11x Hiroshima"),
-        shiny::strong(class = "text-white", "18 de Dezembro de 2018 — Explosão Fantasma do Mar de Bering")
+        shiny::strong(class = "text-white", "18/12/2018 — Evento do Mar de Bering")
       ),
       shiny::p(
         class = "mb-0 small", style = "color: #CBD5E1;",
-        "A segunda maior explosão astronômica das últimas décadas ocorreu sobre águas abertas perto da península de Kamchatka. Como aconteceu em uma rota marítima remota, ninguém na Terra ouviu ou viu o clarão diretamente. O impacto de 173 kt a 25,6 km de altitude foi detectado silenciosamente por sensores de alerta infravermelho de satélites militares dos EUA."
+        "Evento de 173 kt ocorrido a 25,6 km de altitude sobre o Pacífico Norte. Detectado exclusivamente por sensores orbitais devido à localização remota."
       )
     ),
     "vinales" = shiny::div(
       class = "case-banner",
       shiny::div(
         class = "d-flex flex-wrap align-items-center gap-2 mb-1",
-        shiny::span(style = "background: rgba(56, 189, 248, 0.2); color: #7DD3FC; border: 1px solid #38BDF8; border-radius: 999px; padding: 2px 10px; font-size: 0.76rem; font-weight: 700;", "1.4 kt TNT • Ruptura Baixa (8 km)"),
-        shiny::strong(class = "text-white", "01 de Fevereiro de 2019 — Bólido de Viñales, Cuba")
+        shiny::span(style = "background: rgba(56, 189, 248, 0.2); color: #7DD3FC; border: 1px solid #38BDF8; border-radius: 999px; padding: 2px 10px; font-size: 0.76rem; font-weight: 700;", "1.4 kt TNT • Ruptura a 8 km"),
+        shiny::strong(class = "text-white", "01/02/2019 — Meteorito de Viñales, Cuba")
       ),
       shiny::p(
         class = "mb-0 small", style = "color: #CBD5E1;",
-        "Raro evento onde a fragmentação do bólido ocorreu a apenas 8,0 km de altitude (plena Troposfera). Por quebrar muito próximo à superfície terrestre, a desaceleração permitiu que centenas de fragmentos de meteorito sobrevivessem à queima e caíssem na cidade turística de Viñales, permitindo recuperação e análises de laboratório imediatas."
+        "Fragmentação em baixa altitude (8 km, troposfera). A baixa velocidade residual permitiu a recuperação de múltiplos meteoritos na província de Pinar del Río."
       )
     ),
     "fastest" = shiny::div(
@@ -282,11 +282,11 @@ render_case_banner <- function(case_id) {
       shiny::div(
         class = "d-flex flex-wrap align-items-center gap-2 mb-1",
         shiny::span(style = "background: rgba(168, 85, 247, 0.2); color: #D8B4FE; border: 1px solid #A855F7; border-radius: 999px; padding: 2px 10px; font-size: 0.76rem; font-weight: 700;", "49.0 km/s • 176.400 km/h"),
-        shiny::strong(class = "text-white", "23 de Agosto de 2015 — Pico Extremo de Hipervelocidade")
+        shiny::strong(class = "text-white", "23/08/2015 — Evento de Alta Velocidade")
       ),
       shiny::p(
         class = "mb-0 small", style = "color: #CBD5E1;",
-        "Viajando a quase 50 km/s, este meteoroide se movia próximo à velocidade máxima teórica de colisão para objetos capturados na órbita terrestre. A essa velocidade extrema, a energia cinética por grama é descomunal, vaporizando o meteoro quase instantaneamente na alta atmosfera."
+        "Entrada atmosférica a 49,0 km/s (176.400 km/h), próxima ao limite teórico para órbitas heliocêntricas capturadas pela Terra."
       )
     ),
     NULL
@@ -425,7 +425,7 @@ column_dictionary_ui <- function() {
     bslib::card_header(
       class = "d-flex align-items-center gap-2",
       shiny::icon("book-open", class = "text-info"),
-      shiny::span("Dicionário Técnico de Variáveis (NASA CNEOS)")
+      shiny::span("Dicionário de Variáveis")
     ),
     bslib::card_body(
       shiny::div(
@@ -433,25 +433,25 @@ column_dictionary_ui <- function() {
         shiny::div(
           class = "col-md-6",
           shiny::tags$dl(
-            shiny::tags$dt("Data/Hora do Pico (UTC)"),
-            shiny::tags$dd("Instante em Tempo Universal (UT) em que o meteoro atingiu seu brilho luminoso máximo na atmosfera."),
-            shiny::tags$dt("Energia de Impacto Calculada (kt)"),
-            shiny::tags$dd("Energia cinética total estimada do impacto em kilotons de TNT (1 kt = 4,185 × 10¹² Joules), calculada a partir da radiação óptica capturada pelos sensores."),
-            shiny::tags$dt("Equivalência Hiroshima (15 kt)"),
-            shiny::tags$dd("Razão direta entre a energia liberada pelo impacto do bólido e a energia da bomba nuclear de Hiroshima (~15 kilotons de TNT)."),
-            shiny::tags$dt("Energia Total Radiada (10¹⁰ J)"),
-            shiny::tags$dd("Energia óptica líquida irradiada na atmosfera durante a ablação luminosa do bólido.")
+            shiny::tags$dt("Data/Hora (UTC)"),
+            shiny::tags$dd("Instante do pico de emissão óptica registrado em Tempo Universal Coordenado (UTC)."),
+            shiny::tags$dt("Energia de Impacto (kt)"),
+            shiny::tags$dd("Energia cinética total estimada em kilotons de TNT (1 kt = 4,185 × 10¹² Joules), calculada a partir da relação de Brown et al. (2002)."),
+            shiny::tags$dt("Equiv. Hiroshima"),
+            shiny::tags$dd("Razão direta em relação ao referencial histórico de 15 kt de TNT (Little Boy, 1945), facilitando comparações de escala."),
+            shiny::tags$dt("Energia Óptica Radiada (10¹⁰ J)"),
+            shiny::tags$dd("Energia óptica integrada detectada na banda de passagem dos sensores orbitais.")
           )
         ),
         shiny::div(
           class = "col-md-6",
           shiny::tags$dl(
-            shiny::tags$dt("Altitude de Pico (km) & Camada Atmosférica"),
-            shiny::tags$dd("Altitude acima do geoide terrestre onde ocorreu o pico de ablação luminosa (a grande maioria ocorre na Estratosfera, entre 15 km e 50 km)."),
-            shiny::tags$dt("Velocidade Pré-Impacto (km/s)"),
-            shiny::tags$dd("Velocidade heliocêntrica convertida para o referencial geocêntrico no momento de contato com a atmosfera (varia entre 11 km/s e 72 km/s)."),
-            shiny::tags$dt("Coordenadas Geodésicas"),
-            shiny::tags$dd("Latitude e Longitude terrestres calculadas pela triangulação dos satélites. Eventos com valores ausentes refletem dados parciais capturados pelos sensores.")
+            shiny::tags$dt("Altitude (km) & Camada"),
+            shiny::tags$dd("Altitude geométrica estimada no instante do pico de brilho (a maioria dos eventos fragmenta na Estratosfera, entre 15 e 50 km)."),
+            shiny::tags$dt("Velocidade (km/s)"),
+            shiny::tags$dd("Velocidade geocêntrica no momento de contato com a alta atmosfera (faixa física observada de 11 a 72 km/s)."),
+            shiny::tags$dt("Coordenadas"),
+            shiny::tags$dd("Latitude e longitude aproximadas obtidas por triangulação orbital. Valores ausentes indicam detecção parcial.")
           )
         )
       )
@@ -466,26 +466,27 @@ mission_brief_ui <- function() {
       bslib::card_header(
         class = "d-flex align-items-center gap-2",
         shiny::icon("meteor", class = "text-primary"),
-        shiny::span("Física Atmosférica de Bólidos e Fireballs")
+        shiny::span("Dinâmica de Fragmentação Atmosférica")
       ),
       bslib::card_body(
         shiny::p(
-          shiny::strong(class = "text-white", "Fireballs (Bolas de Fogo)"), " e ", shiny::strong(class = "text-white", "Bólidos"),
-          " são termos astronômicos para meteoros excepcionalmente brilhantes (magnitude visual de -3 ou superior no zênite) gerados por fragmentos de asteroides ou cometas que colidem com a Terra em hipervelocidade."
+          shiny::strong(class = "text-white", "Bólidos"), " e ", shiny::strong(class = "text-white", "bolas de fogo (fireballs)"),
+          " são meteoros de magnitude visual igual ou superior a -3 no zênite, resultantes da entrada de pequenos asteroides ou fragmentos cometários na atmosfera da Terra a velocidades hipersônicas."
         ),
         shiny::p(
-          "Durante a reentrada, o meteoroide comprime adiabaticamente os gases atmosféricos à sua frente, gerando uma onda de choque de plasma incandescente a milhares de graus Celsius. Quando a pressão dinâmica supera a resistência mecânica do material, o objeto se fragmenta violentamente em uma explosão no ar (",
-          shiny::strong(class = "text-white", "airburst"), ")."
+          "O atrito e a compressão adiabática a velocidades entre 11 e 72 km/s geram pressões mecânicas extremas sobre o corpo rochoso. Quando a pressão dinâmica supera a resistência estrutural do material, o objeto fragmenta-se abruptamente no ar (",
+          shiny::strong(class = "text-white", "airburst"),
+          "), dissipando a maior parte de sua energia cinética antes de atingir o solo."
         ),
         shiny::div(
           class = "formula-box",
           shiny::div(class = "small text-uppercase fw-bold text-info mb-1", "Relação Empírica de Brown et al. (Nature, 2002)"),
           shiny::code("E (kt) = 8.2508 × E₀^0.885"),
-          shiny::div(class = "small text-secondary mt-1", "E é a energia total de impacto em kilotons de TNT e E₀ é a energia óptica radiada detectada pelos sensores ópticos orbitais.")
+          shiny::div(class = "small text-secondary mt-1", "Onde E é a energia total de impacto em kilotons de TNT e E₀ é a energia óptica radiada detectada pelos sensores (em unidades de 10¹⁰ J).")
         ),
         shiny::p(
           class = "mb-0 small text-secondary",
-          "Publicação de referência: Brown, P. et al., 'The flux of small near-Earth objects colliding with the Earth', Nature, vol. 420, pp. 294–296 (2002)."
+          "Referência: Brown, P. et al., 'The flux of small near-Earth objects colliding with the Earth', Nature, vol. 420, pp. 294–296 (2002)."
         )
       )
     ),
@@ -493,25 +494,25 @@ mission_brief_ui <- function() {
       bslib::card_header(
         class = "d-flex align-items-center gap-2",
         shiny::icon("satellite", class = "text-info"),
-        shiny::span("Rede de Sensores & Referências Históricas")
+        shiny::span("Rede de Sensores & Origem dos Dados")
       ),
       bslib::card_body(
         shiny::p(
-          "Os dados são compilados e disponibilizados pelo ",
+          "Os registros são mantidos e catalogados publicamente pelo ",
           shiny::tags$a("Center for Near Earth Object Studies (CNEOS)", href = "https://cneos.jpl.nasa.gov/fireballs/", target = "_blank", class = "text-info text-decoration-none fw-semibold"),
-          " do Jet Propulsion Laboratory (NASA/JPL), integrando sensores governamentais dos EUA e detecções do sensor óptico GLM dos satélites meteorológicos GOES."
+          " do Jet Propulsion Laboratory (NASA/JPL), integrando sensores governamentais dos EUA e dados dos sensores ópticos GLM dos satélites meteorológicos GOES."
         ),
         shiny::hr(style = "border-color: #1E293B;"),
-        shiny::h6("Impactos Históricos Memoráveis", class = "text-white"),
+        shiny::h6("Eventos Históricos de Referência", class = "text-white"),
         shiny::tags$ul(
           class = "small ps-3",
           shiny::tags$li(
             shiny::strong(class = "text-danger", "Superbólido de Chelyabinsk (15/02/2013):"),
-            " ~440 kt liberados a 23,3 km de altitude na Rússia (equivalente a ~29 bombas de Hiroshima)."
+            " ~440 kt liberados a 23,3 km de altitude na Rússia (~29x Hiroshima)."
           ),
           shiny::tags$li(
             shiny::strong(class = "text-warning", "Mar de Bering (18/12/2018):"),
-            " ~49 a 173 kt de impacto a 25,6 km de altitude sobre o Oceano Pacífico norte."
+            " ~173 kt de impacto a 25,6 km de altitude sobre o Pacífico Norte."
           ),
           shiny::tags$li(
             shiny::strong(class = "text-info", "Referência Hiroshima (1945):"),
@@ -521,7 +522,9 @@ mission_brief_ui <- function() {
         shiny::hr(style = "border-color: #1E293B;"),
         shiny::p(
           class = "small text-secondary mb-0",
-          "Dashboard modernizado com arquitetura modular limpa e design aeroespacial moderno, baseado no trabalho de conclusão do curso de Dashboards da ",
+          "Aplicação analítica desenvolvida em R por ",
+          shiny::tags$strong("Tales Gomes", class = "text-white"),
+          ". Projeto originado a partir do curso de Dashboards da ",
           shiny::tags$a("Curso-R", href = "https://curso-r.com/", target = "_blank", class = "text-primary text-decoration-none"),
           "."
         )

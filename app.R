@@ -36,27 +36,27 @@ max_date <- max(as.Date(nasa_fireball$date), na.rm = TRUE)
 ui <- bslib::page_navbar(
   title = shiny::span(
     shiny::icon("meteor", class = "text-primary me-2"),
-    "NASA Fireballs & Bolides"
+    "NASA CNEOS — Monitoramento de Bólidos"
   ),
   theme = build_space_theme(),
   id = "nav_active",
   sidebar = bslib::sidebar(
     width = 300,
-    title = "Controles da Missão",
+    title = "Filtros e Seleção",
     shiny::selectInput(
       "case_study",
-      "Tour: Casos Históricos",
+      "Casos de Referência",
       choices = c(
-        "Nenhum (Exploração Livre)"                   = "none",
-        "🇷🇺 Superbólido de Chelyabinsk (2013)"        = "chelyabinsk",
-        "🌊 Explosão do Mar de Bering (2018)"         = "bering",
-        "🇨🇺 Bólido de Viñales / Cuba (2019)"          = "vinales",
-        "🚀 Pico de Hipervelocidade (49 km/s)"        = "fastest"
+        "Nenhum (todos os eventos)"         = "none",
+        "Superbólido de Chelyabinsk (2013)" = "chelyabinsk",
+        "Evento do Mar de Bering (2018)"    = "bering",
+        "Meteorito de Viñales (2019)"       = "vinales",
+        "Evento de Alta Velocidade (2015)"  = "fastest"
       ),
       selected = "none"
     ),
     shiny::hr(style = "border-color: #1E293B;"),
-    shiny::h6("Filtros Globais", class = "text-uppercase small fw-bold mt-2"),
+    shiny::h6("Filtros", class = "text-uppercase small fw-bold mt-2"),
     shiny::dateRangeInput(
       "date_range",
       "Período de Observação",
@@ -86,10 +86,10 @@ ui <- bslib::page_navbar(
     ),
     shiny::radioButtons(
       "map_projection",
-      "Projeção Espacial",
+      "Projeção do Mapa",
       choices = c(
-        "Globo 3D Ortográfico" = "orthographic",
-        "Mapa 2D Global"       = "natural earth"
+        "Globo 3D" = "orthographic",
+        "Mapa 2D"  = "natural earth"
       ),
       selected = "orthographic"
     ),
@@ -97,9 +97,9 @@ ui <- bslib::page_navbar(
     shiny::uiOutput("filter_summary_ui")
   ),
 
-  # Aba 1: Centro de Comando (Command Center) -----------------------------
+  # Aba 1: Painel Geral ---------------------------------------------------
   bslib::nav_panel(
-    "Centro de Comando",
+    "Painel Geral",
     icon = shiny::icon("dashboard"),
     shiny::div(
       class = "container-fluid px-0",
@@ -147,13 +147,13 @@ ui <- bslib::page_navbar(
           full_screen = TRUE,
           bslib::card_header(
             class = "d-flex justify-content-between align-items-center",
-            shiny::span(shiny::icon("globe-americas", class = "text-info me-2"), "Mapa Global de Bólidos"),
+            shiny::span(shiny::icon("globe-americas", class = "text-info me-2"), "Distribuição Geográfica dos Eventos"),
             shiny::span(class = "small text-secondary", "Escala de energia em kilotons (kt)")
           ),
           plotly::plotlyOutput("geo_plot", height = "560px")
         ),
         bslib::navset_card_underline(
-          title = "Análise Científica",
+          title = "Análise dos Dados",
           full_screen = TRUE,
           bslib::nav_panel(
             "Série Temporal",
@@ -169,7 +169,7 @@ ui <- bslib::page_navbar(
             "Sazonalidade",
             icon = shiny::icon("calendar-days"),
             shiny::p(class = "small text-secondary mt-1 mb-2",
-                     "Detecções por mês cruzadas com os períodos de chuvas de meteoros conhecidas."),
+                     "Frequência mensal acumulada cruzada com os períodos de chuvas anuais de meteoros."),
             plotly::plotlyOutput("seasonality_plot", height = "450px")
           ),
           bslib::nav_panel(
@@ -195,16 +195,16 @@ ui <- bslib::page_navbar(
     )
   ),
 
-  # Aba 2: Explorador de Dados --------------------------------------------
+  # Aba 2: Dados Históricos -----------------------------------------------
   bslib::nav_panel(
-    "Explorador de Dados",
+    "Dados Históricos",
     icon = shiny::icon("table"),
     bslib::card(
       full_screen = TRUE,
       class = "mb-3",
       bslib::card_header(
         class = "d-flex justify-content-between align-items-center",
-        shiny::span(shiny::icon("database", class = "text-primary me-2"), "Tabela Cronológica de Detecções"),
+        shiny::span(shiny::icon("database", class = "text-primary me-2"), "Catálogo de Detecções"),
         shiny::downloadButton("download_csv", "Exportar CSV", class = "btn-outline-primary btn-sm")
       ),
       bslib::card_body(
@@ -214,9 +214,9 @@ ui <- bslib::page_navbar(
     column_dictionary_ui()
   ),
 
-  # Aba 3: Briefing da Missão ---------------------------------------------
+  # Aba 3: Metodologia & Fontes -------------------------------------------
   bslib::nav_panel(
-    "Briefing da Missão",
+    "Metodologia & Fontes",
     icon = shiny::icon("circle-info"),
     mission_brief_ui()
   ),

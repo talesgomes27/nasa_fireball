@@ -29,16 +29,16 @@ plotly_theme_colors <- function(is_dark = TRUE) {
 build_event_tooltip <- function(df) {
   paste0(
     "<b>", format(df$date, "%d/%m/%Y %H:%M UTC"), "</b><br>",
-    "📍 Coordenadas: <b>", df$location_label, "</b><br>",
-    "💥 Energia de Impacto: <b style='color:#F97316;'>", format(df$impact_e, big.mark = ".", decimal.mark = ","), " kt</b>",
+    "Coordenadas: <b>", df$location_label, "</b><br>",
+    "Impacto: <b style='color:#F97316;'>", format(df$impact_e, big.mark = ".", decimal.mark = ","), " kt</b>",
     ifelse(
       !is.na(df$hiroshima_eq) & df$hiroshima_eq >= 0.1,
       paste0(" (<b>", df$hiroshima_eq, "x</b> Hiroshima)"),
       ""
     ), "<br>",
-    "⚡ Energia Radiada: ", format(df$energy, big.mark = ".", decimal.mark = ","), " × 10¹⁰ J<br>",
-    "🏔️ Altitude: ", ifelse(is.na(df$alt), "Não registrada", paste0(df$alt, " km (", df$atmo_layer, ")")), "<br>",
-    "🚀 Velocidade: ", ifelse(is.na(df$vel), "Não registrada", paste0(df$vel, " km/s"))
+    "Energia Óptica: ", format(df$energy, big.mark = ".", decimal.mark = ","), " × 10¹⁰ J<br>",
+    "Altitude: ", ifelse(is.na(df$alt), "Não registrada", paste0(df$alt, " km (", df$atmo_layer, ")")), "<br>",
+    "Velocidade: ", ifelse(is.na(df$vel), "Não registrada", paste0(df$vel, " km/s"))
   )
 }
 
@@ -116,17 +116,17 @@ plot_fireball_timeline <- function(df, is_dark = TRUE) {
   plotly::plot_ly(yearly, x = ~year) |>
     plotly::add_bars(
       y = ~eventos,
-      name = "Eventos Detectados",
+      name = "Total de Eventos",
       marker = list(
         color = "rgba(56, 189, 248, 0.45)",
         line = list(color = "#38BDF8", width = 1)
       ),
-      hovertemplate = "<b>Ano %{x}</b><br>Detecções: %{y}<extra></extra>"
+      hovertemplate = "<b>Ano %{x}</b><br>Eventos: %{y}<extra></extra>"
     ) |>
     plotly::add_lines(
       y = ~max_impact,
       yaxis = "y2",
-      name = "Pico de Impacto (kt)",
+      name = "Maior Impacto no Ano (kt)",
       mode = "lines+markers",
       line = list(color = "#F97316", width = 2.2),
       marker = list(color = "#F97316", size = 5),
@@ -136,10 +136,10 @@ plot_fireball_timeline <- function(df, is_dark = TRUE) {
       paper_bgcolor = "rgba(0,0,0,0)",
       plot_bgcolor  = "rgba(0,0,0,0)",
       font          = list(family = "Inter, sans-serif", color = pal$text),
-      xaxis         = list(title = "Ano de Detecção", gridcolor = pal$grid, zeroline = FALSE, tickfont = list(color = pal$muted)),
-      yaxis         = list(title = "Nº de Eventos", gridcolor = pal$grid, zeroline = FALSE, tickfont = list(color = pal$muted)),
+      xaxis         = list(title = "Ano", gridcolor = pal$grid, zeroline = FALSE, tickfont = list(color = pal$muted)),
+      yaxis         = list(title = "Detecções", gridcolor = pal$grid, zeroline = FALSE, tickfont = list(color = pal$muted)),
       yaxis2        = list(
-        title      = "Pico Anual de Impacto (kt)",
+        title      = "Maior Impacto Anual (kt)",
         overlaying = "y",
         side       = "right",
         type       = "log",
@@ -280,19 +280,19 @@ plot_fireball_seasonality <- function(df, is_dark = TRUE) {
   plotly::plot_ly(df_month, x = ~month_lbl) |>
     plotly::add_bars(
       y = ~total_eventos,
-      name = "Total de Bólidos",
+      name = "Total de Eventos",
       marker = list(
         color = "rgba(168, 85, 247, 0.55)",
         line = list(color = "#A855F7", width = 1.2)
       ),
-      hovertemplate = "<b>Mês: %{x}</b><br>Total Detectado: %{y}<br>Pico Histórico: %{customdata:.1f} kt<extra></extra>",
+      hovertemplate = "<b>Mês: %{x}</b><br>Eventos: %{y}<br>Maior Impacto: %{customdata:.1f} kt<extra></extra>",
       customdata = ~max_impact
     ) |>
     plotly::layout(
       paper_bgcolor = "rgba(0,0,0,0)",
       plot_bgcolor  = "rgba(0,0,0,0)",
       font          = list(family = "Inter, sans-serif", color = pal$text),
-      xaxis         = list(title = "Mês do Ano", gridcolor = pal$grid, tickfont = list(color = pal$text)),
+      xaxis         = list(title = "Mês", gridcolor = pal$grid, tickfont = list(color = pal$text)),
       yaxis         = list(title = "Detecções Acumuladas", gridcolor = pal$grid, tickfont = list(color = pal$muted)),
       annotations   = list(
         list(x = "Jan", y = max(df_month$total_eventos) * 0.95, text = "Quadrantídeas",

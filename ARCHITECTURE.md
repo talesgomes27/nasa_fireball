@@ -1,76 +1,71 @@
-# Arquitetura e Especificação Técnica: NASA Fireballs & Bolides Command Center
+# Arquitetura do Software: NASA Fireballs (R Shiny)
 
-## 1. Resumo do Entendimento (Understanding Summary)
-- **Objetivo**: Modernização completa do painel em R Shiny de monitoramento de bólidos e bolas de fogo (fireballs) da NASA/JPL CNEOS.
-- **Público-Alvo**: Cientistas de dados, entusiastas de astronomia, avaliadores e visitantes do portfólio.
-- **Direção Visual**: *Deep Space Telemetry* (Dark-First com toggle nativo para Light Mode via `bslib::input_dark_mode()`, acentos em laranja plasma `#F97316` e ciano orbital `#38BDF8`, tipografia `Space Grotesk` + `Inter` + `JetBrains Mono`).
-- **Idioma da Interface**: Português (PT-BR).
+## 1. Visão Geral do Sistema
+Aplicação analítica interativa em R Shiny para monitoramento, análise física e visualização geoespacial dos dados de impactos de bólidos e meteoros catalogados pela NASA/JPL CNEOS (*Center for Near Earth Object Studies*).
 
-## 2. Premissas e Requisitos Não-Funcionais (Assumptions)
-- **Eliminação de Dependências Pesadas (Design Enxuto)**:
-  - Removidos: `shinydashboard`, `dashboardthemes`, `shinycustomloader`, `sf`, `rnaturalearth`, `rnaturalearthdata`, `ggthemes`, `parzer`, `janitor` e o metapacote `tidyverse`.
-  - Stack enxuta mantida: `shiny`, `bslib` (Bootstrap 5), `plotly` (nativo), `reactable`, `jsonlite` e `dplyr` / R base.
-- **Resiliência e Cache**:
-  - Ingestão via `fetch_fireball_data()` com timeout de 5 segundos e fallback transparente para cache local em `data/fireball_cache.rds`.
-  - Indicador de status da conexão no cabeçalho (*Live API NASA* vs. *Cache Local Offline*).
-- **Tratamento de Dados Incompletos**:
-  - Filtros e gráficos lidam graciosamente com valores nulos (`NA`) em coordenadas, altitude e velocidade sem quebrar a sessão do usuário.
+### Stack Tecnológica
+* **Linguagem**: R (versão $\ge 4.1$)
+* **Framework Web**: `shiny` + `bslib` (Bootstrap 5)
+* **Motor Gráfico**: `plotly` (nativo WebGL/SVG)
+* **Tabelas Interativas**: `reactable`
+* **Parsing & Requisições**: `jsonlite` + R base
+* **Estratégia de Deploy**:
+  - Cloud Linux Container (`shinyapps.io`)
+  - Serverless WebAssembly client-side via Shinylive (`GitHub Pages`)
 
-## 3. Decision Log (Registro de Decisões)
-| Decisão | Alternativas Consideradas | Motivo da Escolha |
+---
+
+## 2. Requisitos Técnicos e Restrições de Plataforma
+
+1. **Compatibilidade com WebAssembly (webR)**:
+   - Bibliotecas R com dependências de compilação em C/C++ vinculadas ao sistema operacional (como `sf`, `gdal`, `geos`, `rnaturalearth`) não são suportadas no ambiente webR do Shinylive sem portas específicas.
+   - O mapa de impactos utiliza `plotly::plot_geo` com projeção ortográfica 3D e equirretangular 2D, eliminando drivers espaciais pesados do bundle.
+
+2. **Tolerância a Falhas de Conexão**:
+   - A API pública da NASA (`ssd-api.jpl.nasa.gov`) pode apresentar oscilações ou latência.
+   - A função `fetch_fireball_data()` define timeout e cabeçalho `HTTPUserAgent`. Caso a conexão falhe, o sistema carrega o snapshot serializado local (`data/fireball_cache.rds`) sem interromper o boot do aplicativo.
+
+3. **Design System & Acessibilidade**:
+   - Tema *Dark-First* construído via `bslib::bs_theme` com suporte a alternância dinâmica claro/escuro (`bslib::input_dark_mode`).
+   - Contraste visual de textos e componentes conforme as diretrizes WCAG AA.
+
+---
+
+## 3. Registro de Decisões de Arquitetura (ADR)
+
+| Decisão | Alternativas Avaliadas | Justificativa Técnica |
 | :--- | :--- | :--- |
-| **Stack `bslib` (Bootstrap 5)** | Manter `shinydashboard` ou migrar para Python/JS | Moderniza o visual com suporte nativo a cards/temas, elimina 3 pacotes legados e mantém deploy no `shinyapps.io`. |
-| **Arquitetura Modular em `R/`** | Monolito único em `app.R` ou Módulos `NS()` / Golem | Separa Dados, Gráficos e UI em arquivos curtos (<150 linhas) usando autoloading nativo do Shiny, sem boilerplate. |
-| **Mapa via `plotly::plot_geo` (3D/2D)** | `ggplot2` + `sf` + `rnaturalearth` + `ggplotly` | Corta 4 dependências pesadas, acelera a renderização e adiciona o Globo 3D interativo com código mínimo. |
-| **Remoção dos 4 arquivos `.html`** | Limpar o CSS inline nos HTMLs antigos | Textos estruturados diretamente em componentes nativos de UI (`R/ui_components.R`) respeitam Dark/Light mode e tipografia. |
-| **Cache Local `.rds` de Fallback** | Requisição direta bloqueante na API | Garante abertura instantânea e funcionamento offline caso a API da NASA oscile. |
+| **Adoção de `bslib` (Bootstrap 5)** | Manter `shinydashboard` | Suporte nativo a cards, temas dinâmicos e eliminação de 3 dependências obsoletas (`shinydashboard`, `dashboardthemes`, `shinycustomloader`). |
+| **Modularização em `R/`** | Monólito em `app.R` ou framework `golem` | Separação de responsabilidades (dados, gráficos e UI) sem adicionar o overhead estrutural de empacotamento do golem. |
+| **Mapa em `plotly::plot_geo`** | `leaflet`, `ggplot2` estático ou `mapview` | Oferece rotação tridimensional de globo (ortográfica) com aceleração gráfica no navegador e sem dependências GIS pesadas. |
+| **Cache Local Serializado (`.rds`)** | Requisição síncrona sem contingência | Previne telas de erro na inicialização caso a API da NASA oscile. |
+| **Deploy Dual (shinyapps.io + Pages)** | Hospedagem única no shinyapps.io | Garante disponibilidade ininterrupta via WebAssembly estático no GitHub Pages, contornando o limite de 25 horas mensais da conta gratuita do shinyapps.io. |
 
-## 4. Estrutura do Projeto
+---
+
+## 4. Estrutura de Diretórios e Componentes
+
 ```text
 nasa_fireball/
-├── app.R                     # Orquestrador da aplicação, UI navbar e servidor reativo
+├── app.R                     # Ponto de entrada: UI de navegação, layout reativo e servidor Shiny
 ├── R/
-│   ├── data_fireball.R       # Ingestão resiliente, sanitização em R base e fallback
-│   ├── plots_fireball.R      # Visualizações nativas em Plotly (Globo 3D, Timeline, Atmosfera)
-│   └── ui_components.R       # Cards de KPIs, tabela reactable e textos da missão
+│   ├── data_fireball.R       # Ingestão HTTP, cache local, parse do JSON e filtros reativos
+│   ├── plots_fireball.R      # Funções de renderização em Plotly (Globo 3D, timeline, atmosfera, sazonalidade)
+│   └── ui_components.R       # Tema visual, cards de indicadores, tabela reactable e textos explicativos
 ├── data/
-│   └── fireball_cache.rds    # Snapshot local de fallback para resiliência offline
+│   └── fireball_cache.rds    # Snapshot local de segurança para execução offline
+├── .github/workflows/
+│   └── deploy-shinylive.yml  # Pipeline de compilação WebAssembly para GitHub Pages
 ├── ARCHITECTURE.md           # Este documento de especificação
-└── README.md                 # Visão geral do projeto e instruções de execução
+├── LICENSE                   # Licença MIT
+└── README.md                 # Apresentação do projeto e guia de uso
 ```
 
-## 5. Especificação Funcional dos Componentes
-### Aba 1: Centro de Comando (Command Center)
-- **Filtros Globais & Tour (Sidebar)**:
-  - Tour de Casos Históricos (`selectInput`): Chelyabinsk 2013, Mar de Bering 2018, Viñales 2019, Hipervelocidade 2015.
-  - Banner Educativo Contextual: Renderiza narrativa histórica, dados físicos e badges ao ativar um caso no tour.
-  - Intervalo de Datas (`dateRangeInput`).
-  - Energia Mínima de Impacto (`selectInput`).
-  - Projeção Espacial: Alternância entre **Globo 3D (Ortográfico)** e **Mapa 2D (Equirretangular)**.
-  - Indicador numérico de eventos ativos.
-- **4 Value Boxes Reativos**:
-  1. *Total de Detecções*: Contagem reativa de bólidos no filtro.
-  2. *Maior Energia de Impacto*: Valor máximo em kilotons (kt) + equivalência com bombas de Hiroshima (`15 kt`).
-  3. *Velocidade Máxima*: Pico de velocidade pré-impacto em `km/s`.
-  4. *Altitude Média*: Altitude média no ponto de brilho máximo em `km`.
-- **Painel Central**:
-  - Globo 3D / Mapa 2D interativo com escala logarítmica de energia e tooltips ricos.
-- **Painel Analítico Lateral (`navset_card_underline`)**:
-  - *Série Temporal*: Eventos por ano e energia acumulada/máxima.
-  - *Perfil Atmosférico*: Gráfico de dispersão Altitude × Velocidade com demarcação das camadas atmosféricas (Troposfera, Estratosfera, Mesosfera).
-  - *Sazonalidade*: Distribuição mensal acumulada cruzada com os picos das chuvas de meteoros (Quadrantídeas, Perseidas, Geminídeas).
-  - *Distribuição & Correlação*: Gráfico de dispersão log-log configurável entre variáveis físicas.
+---
 
-### Aba 2: Explorador de Dados (Data Explorer)
-- Tabela interativa com `reactable`:
-  - Barra de visualização para energia de impacto.
-  - Formatação refinada de datas, coordenadas e altitudes.
-  - Paginação rápida, ordenação e busca integrada.
-- Botão de download de dados filtrados em CSV.
-- Dicionário de variáveis integrado em card colapsável.
+## 5. Fluxo de Dados Reativo
 
-### Aba 3: Briefing da Missão (Mission Brief)
-- Contextualização física e astronômica da detecção de meteoros e bólidos.
-- Descrição da equação empírica de Peter Brown et al. (2002) para cálculo de energia de impacto.
-- Informações sobre sensores governamentais e satélites GOES/GLM.
-- Créditos do projeto e links oficiais da NASA JPL CNEOS.
+1. **Boot**: `fetch_fireball_data()` consulta a API do CNEOS com User-Agent customizado. Se bem-sucedido, atualiza `fireball_cache.rds`; se falhar, lê o RDS local.
+2. **Filtros Globais**: A expressão reativa `fireballs_r()` em `app.R` filtra os dados em memória por intervalo de datas e energia mínima de impacto.
+3. **Casos de Referência**: A seleção no `selectInput("case_study")` atualiza programaticamente os inputs de data e energia via `shiny::updateDateRangeInput()` e `shiny::updateSelectInput()`.
+4. **Renderização**: Os dados filtrados alimentam simultaneamente o mapa 3D, os quatro gráficos analíticos, os KPIs e a tabela interativa do `reactable`.
