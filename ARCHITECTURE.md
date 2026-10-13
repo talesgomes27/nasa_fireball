@@ -41,7 +41,9 @@ nasa_fireball/
 
 ## 5. Especificação Funcional dos Componentes
 ### Aba 1: Centro de Comando (Command Center)
-- **Filtros Globais (Sidebar)**:
+- **Filtros Globais & Tour (Sidebar)**:
+  - Tour de Casos Históricos (`selectInput`): Chelyabinsk 2013, Mar de Bering 2018, Viñales 2019, Hipervelocidade 2015.
+  - Banner Educativo Contextual: Renderiza narrativa histórica, dados físicos e badges ao ativar um caso no tour.
   - Intervalo de Datas (`dateRangeInput`).
   - Energia Mínima de Impacto (`selectInput`).
   - Projeção Espacial: Alternância entre **Globo 3D (Ortográfico)** e **Mapa 2D (Equirretangular)**.
@@ -56,7 +58,8 @@ nasa_fireball/
 - **Painel Analítico Lateral (`navset_card_underline`)**:
   - *Série Temporal*: Eventos por ano e energia acumulada/máxima.
   - *Perfil Atmosférico*: Gráfico de dispersão Altitude × Velocidade com demarcação das camadas atmosféricas (Troposfera, Estratosfera, Mesosfera).
-  - *Distribuição & Correlação*: Gráfico de dispersão com referências de eventos históricos (Chelyabinsk 2013, Hiroshima).
+  - *Sazonalidade*: Distribuição mensal acumulada cruzada com os picos das chuvas de meteoros (Quadrantídeas, Perseidas, Geminídeas).
+  - *Distribuição & Correlação*: Gráfico de dispersão log-log configurável entre variáveis físicas.
 
 ### Aba 2: Explorador de Dados (Data Explorer)
 - Tabela interativa com `reactable`:

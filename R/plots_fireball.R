@@ -127,6 +127,7 @@ plot_fireball_timeline <- function(df, is_dark = TRUE) {
       y = ~max_impact,
       yaxis = "y2",
       name = "Pico de Impacto (kt)",
+      mode = "lines+markers",
       line = list(color = "#F97316", width = 2.2),
       marker = list(color = "#F97316", size = 5),
       hovertemplate = "<b>Ano %{x}</b><br>Maior Impacto: %{y:.2f} kt<extra></extra>"
@@ -254,3 +255,59 @@ plot_energy_correlation <- function(df, var_x, var_y, is_dark = TRUE) {
     ) |>
     plotly::config(displaylogo = FALSE)
 }
+
+plot_fireball_seasonality <- function(df, is_dark = TRUE) {
+  pal <- plotly_theme_colors(is_dark)
+
+  df_month <- df |>
+    dplyr::filter(!is.na(date)) |>
+    dplyr::mutate(
+      month_num = as.integer(format(date, "%m")),
+      month_lbl = factor(
+        month_num,
+        levels = 1:12,
+        labels = c("Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez")
+      )
+    ) |>
+    dplyr::summarise(
+      total_eventos = dplyr::n(),
+      max_impact    = max(impact_e, na.rm = TRUE),
+      avg_impact    = mean(impact_e, na.rm = TRUE),
+      .by = c(month_num, month_lbl)
+    ) |>
+    dplyr::arrange(month_num)
+
+  plotly::plot_ly(df_month, x = ~month_lbl) |>
+    plotly::add_bars(
+      y = ~total_eventos,
+      name = "Total de Bólidos",
+      marker = list(
+        color = "rgba(168, 85, 247, 0.55)",
+        line = list(color = "#A855F7", width = 1.2)
+      ),
+      hovertemplate = "<b>Mês: %{x}</b><br>Total Detectado: %{y}<br>Pico Histórico: %{customdata:.1f} kt<extra></extra>",
+      customdata = ~max_impact
+    ) |>
+    plotly::layout(
+      paper_bgcolor = "rgba(0,0,0,0)",
+      plot_bgcolor  = "rgba(0,0,0,0)",
+      font          = list(family = "Inter, sans-serif", color = pal$text),
+      xaxis         = list(title = "Mês do Ano", gridcolor = pal$grid, tickfont = list(color = pal$text)),
+      yaxis         = list(title = "Detecções Acumuladas", gridcolor = pal$grid, tickfont = list(color = pal$muted)),
+      annotations   = list(
+        list(x = "Jan", y = max(df_month$total_eventos) * 0.95, text = "Quadrantídeas",
+             showarrow = TRUE, arrowhead = 2, arrowsize = 0.8, ax = 0, ay = -25,
+             font = list(size = 9, color = "#38BDF8")),
+        list(x = "Ago", y = max(df_month$total_eventos) * 0.95, text = "Perseidas",
+             showarrow = TRUE, arrowhead = 2, arrowsize = 0.8, ax = 0, ay = -25,
+             font = list(size = 9, color = "#F97316")),
+        list(x = "Dez", y = max(df_month$total_eventos) * 0.95, text = "Geminídeas",
+             showarrow = TRUE, arrowhead = 2, arrowsize = 0.8, ax = 0, ay = -25,
+             font = list(size = 9, color = "#10B981"))
+      ),
+      margin        = list(l = 50, r = 20, t = 40, b = 45),
+      hoverlabel    = list(bgcolor = pal$hover_bg, bordercolor = "#334155")
+    ) |>
+    plotly::config(displaylogo = FALSE)
+}
+

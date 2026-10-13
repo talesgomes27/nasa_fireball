@@ -30,6 +30,19 @@ ui <- bslib::page_navbar(
   sidebar = bslib::sidebar(
     width = 300,
     title = "Controles da Missão",
+    shiny::selectInput(
+      "case_study",
+      "Tour: Casos Históricos",
+      choices = c(
+        "Nenhum (Exploração Livre)"                   = "none",
+        "🇷🇺 Superbólido de Chelyabinsk (2013)"        = "chelyabinsk",
+        "🌊 Explosão do Mar de Bering (2018)"         = "bering",
+        "🇨🇺 Bólido de Viñales / Cuba (2019)"          = "vinales",
+        "🚀 Pico de Hipervelocidade (49 km/s)"        = "fastest"
+      ),
+      selected = "none"
+    ),
+    shiny::hr(style = "border-color: #1E293B;"),
     shiny::h6("Filtros Globais", class = "text-uppercase small fw-bold mt-2"),
     shiny::dateRangeInput(
       "date_range",
@@ -111,6 +124,9 @@ ui <- bslib::page_navbar(
         )
       ),
 
+      # Banner contextual do tour historico
+      shiny::uiOutput("case_banner_ui"),
+
       # Layout principal: Globo 3D e painel analitico
       bslib::layout_columns(
         col_widths = c(7, 5),
@@ -135,6 +151,13 @@ ui <- bslib::page_navbar(
             "Perfil Atmosférico",
             icon = shiny::icon("layer-group"),
             plotly::plotlyOutput("atmosphere_plot", height = "520px")
+          ),
+          bslib::nav_panel(
+            "Sazonalidade",
+            icon = shiny::icon("calendar-days"),
+            shiny::p(class = "small text-secondary mt-1 mb-2",
+                     "Detecções por mês cruzadas com os períodos de chuvas de meteoros conhecidas."),
+            plotly::plotlyOutput("seasonality_plot", height = "450px")
           ),
           bslib::nav_panel(
             "Correlação",
@@ -191,11 +214,11 @@ ui <- bslib::page_navbar(
   bslib::nav_item(shiny::uiOutput("header_badge_ui"))
 )
 
-# Server Logic ------------------------------------------------------------
+# Logica do Servidor ----
 
 server <- function(input, output, session) {
 
-  # Reativo central que filtra dados com base na sidebar
+  # Filtro reativo principal baseado nos controles da barra lateral
   fireballs_r <- shiny::reactive({
     filter_fireballs(nasa_fireball, input$date_range, input$min_impact_e)
   })
@@ -226,6 +249,39 @@ server <- function(input, output, session) {
       )
     )
   })
+
+  # Banner contextual do tour historico
+  output$case_banner_ui <- shiny::renderUI({
+    render_case_banner(input$case_study)
+  })
+
+  # Sincroniza controles ao selecionar caso no tour
+  shiny::observeEvent(input$case_study, {
+    req(input$case_study)
+    switch(input$case_study,
+      "chelyabinsk" = {
+        shiny::updateDateRangeInput(session, "date_range", start = "2013-02-01", end = "2013-02-28")
+        shiny::updateSelectInput(session, "min_impact_e", selected = 0)
+        shiny::updateRadioButtons(session, "map_projection", selected = "orthographic")
+      },
+      "bering" = {
+        shiny::updateDateRangeInput(session, "date_range", start = "2018-12-01", end = "2018-12-31")
+        shiny::updateSelectInput(session, "min_impact_e", selected = 0)
+        shiny::updateRadioButtons(session, "map_projection", selected = "orthographic")
+      },
+      "vinales" = {
+        shiny::updateDateRangeInput(session, "date_range", start = "2019-01-20", end = "2019-02-15")
+        shiny::updateSelectInput(session, "min_impact_e", selected = 0)
+      },
+      "fastest" = {
+        shiny::updateDateRangeInput(session, "date_range", start = "2015-08-01", end = "2015-08-31")
+        shiny::updateSelectInput(session, "min_impact_e", selected = 0)
+      },
+      "none" = {
+        shiny::updateDateRangeInput(session, "date_range", start = min_date, end = max_date)
+      }
+    )
+  }, ignoreInit = TRUE)
 
   # Indicadores principais (KPIs) ----
   output$kpi_total_count <- shiny::renderText({
@@ -286,6 +342,12 @@ server <- function(input, output, session) {
     df <- fireballs_r()
     shiny::validate(shiny::need(nrow(df) > 0, "Nenhum evento com dados de altitude e velocidade."))
     plot_atmosphere_profile(df, is_dark = is_dark_r())
+  })
+
+  output$seasonality_plot <- plotly::renderPlotly({
+    df <- fireballs_r()
+    shiny::validate(shiny::need(nrow(df) > 0, "Nenhum dado para analisar sazonalidade."))
+    plot_fireball_seasonality(df, is_dark = is_dark_r())
   })
 
   output$correlation_plot <- plotly::renderPlotly({

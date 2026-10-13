@@ -226,8 +226,73 @@ build_space_theme <- function() {
       .rt-td {
         border-bottom: 1px solid #1E293B !important;
       }
+      .case-banner {
+        background: #0F172A !important;
+        border: 1px solid #334155 !important;
+        border-left: 4px solid #F97316 !important;
+        border-radius: 10px;
+        padding: 0.9rem 1.25rem;
+        margin-bottom: 1rem;
+      }
     ")
 }
+
+render_case_banner <- function(case_id) {
+  if (is.null(case_id) || identical(case_id, "none")) return(NULL)
+
+  switch(case_id,
+    "chelyabinsk" = shiny::div(
+      class = "case-banner",
+      shiny::div(
+        class = "d-flex flex-wrap align-items-center gap-2 mb-1",
+        shiny::span(style = "background: rgba(239, 68, 68, 0.2); color: #FCA5A5; border: 1px solid #EF4444; border-radius: 999px; padding: 2px 10px; font-size: 0.76rem; font-weight: 700;", "440 kt TNT • ~29x Hiroshima"),
+        shiny::strong(class = "text-white", "15 de Fevereiro de 2013 — Superbólido de Chelyabinsk, Rússia")
+      ),
+      shiny::p(
+        class = "mb-0 small", style = "color: #CBD5E1;",
+        "O maior evento de impacto registrado no século XXI. Um asteroide de aproximadamente 20 metros entrou na atmosfera a 18,6 km/s e sofreu desintegração catastrófica a 23,3 km de altitude. A onda de choque superou a barreira do som, quebrou janelas em mais de 7.200 edifícios e feriu cerca de 1.500 pessoas por estilhaços. A fragmentação no ar (airburst) impediu a formação de uma cratera fatal no solo."
+      )
+    ),
+    "bering" = shiny::div(
+      class = "case-banner",
+      shiny::div(
+        class = "d-flex flex-wrap align-items-center gap-2 mb-1",
+        shiny::span(style = "background: rgba(245, 158, 11, 0.2); color: #FCD34D; border: 1px solid #F59E0B; border-radius: 999px; padding: 2px 10px; font-size: 0.76rem; font-weight: 700;", "173 kt TNT • ~11x Hiroshima"),
+        shiny::strong(class = "text-white", "18 de Dezembro de 2018 — Explosão Fantasma do Mar de Bering")
+      ),
+      shiny::p(
+        class = "mb-0 small", style = "color: #CBD5E1;",
+        "A segunda maior explosão astronômica das últimas décadas ocorreu sobre águas abertas perto da península de Kamchatka. Como aconteceu em uma rota marítima remota, ninguém na Terra ouviu ou viu o clarão diretamente. O impacto de 173 kt a 25,6 km de altitude foi detectado silenciosamente por sensores de alerta infravermelho de satélites militares dos EUA."
+      )
+    ),
+    "vinales" = shiny::div(
+      class = "case-banner",
+      shiny::div(
+        class = "d-flex flex-wrap align-items-center gap-2 mb-1",
+        shiny::span(style = "background: rgba(56, 189, 248, 0.2); color: #7DD3FC; border: 1px solid #38BDF8; border-radius: 999px; padding: 2px 10px; font-size: 0.76rem; font-weight: 700;", "1.4 kt TNT • Ruptura Baixa (8 km)"),
+        shiny::strong(class = "text-white", "01 de Fevereiro de 2019 — Bólido de Viñales, Cuba")
+      ),
+      shiny::p(
+        class = "mb-0 small", style = "color: #CBD5E1;",
+        "Raro evento onde a fragmentação do bólido ocorreu a apenas 8,0 km de altitude (plena Troposfera). Por quebrar muito próximo à superfície terrestre, a desaceleração permitiu que centenas de fragmentos de meteorito sobrevivessem à queima e caíssem na cidade turística de Viñales, permitindo recuperação e análises de laboratório imediatas."
+      )
+    ),
+    "fastest" = shiny::div(
+      class = "case-banner",
+      shiny::div(
+        class = "d-flex flex-wrap align-items-center gap-2 mb-1",
+        shiny::span(style = "background: rgba(168, 85, 247, 0.2); color: #D8B4FE; border: 1px solid #A855F7; border-radius: 999px; padding: 2px 10px; font-size: 0.76rem; font-weight: 700;", "49.0 km/s • 176.400 km/h"),
+        shiny::strong(class = "text-white", "23 de Agosto de 2015 — Pico Extremo de Hipervelocidade")
+      ),
+      shiny::p(
+        class = "mb-0 small", style = "color: #CBD5E1;",
+        "Viajando a quase 50 km/s, este meteoroide se movia próximo à velocidade máxima teórica de colisão para objetos capturados na órbita terrestre. A essa velocidade extrema, a energia cinética por grama é descomunal, vaporizando o meteoro quase instantaneamente na alta atmosfera."
+      )
+    ),
+    NULL
+  )
+}
+
 
 render_status_badge <- function(source_type, total_rows) {
   if (identical(source_type, "live")) {
