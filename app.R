@@ -5,7 +5,20 @@ library(bslib)
 library(plotly)
 library(reactable)
 
-# Modulos do projeto
+# Dependencias declaradas para o analisador estatico do Shinylive / webR
+if (FALSE) {
+  library(jsonlite)
+  library(dplyr)
+  library(scales)
+  library(htmlwidgets)
+  library(yaml)
+  library(ggplot2)
+  library(reactR)
+  library(tibble)
+  library(rlang)
+}
+
+# Carrega módulos da pasta R/
 source("R/data_fireball.R")
 source("R/plots_fireball.R")
 source("R/ui_components.R")

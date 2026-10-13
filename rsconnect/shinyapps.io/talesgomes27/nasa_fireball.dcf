@@ -1,13 +1,9 @@
 name: nasa_fireball
-title: nasa_fireball
+title: NASA Fireballs & Bolides Command Center
 username:
 account: talesgomes27
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 5174399
-bundleId: 5437774
+bundleId: 12683672
 url: https://talesgomes27.shinyapps.io/nasa_fireball/
-when: 1641411721.7867
-lastSyncTime: 1641411721.78674
-asMultiple: FALSE
-asStatic: FALSE
